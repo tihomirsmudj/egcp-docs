@@ -15,8 +15,12 @@ VERZIJE
 ==  Arhitektura
 	1. --== TODO ==-- Slika hardverske arhitekture s detaljima o resursima - diskovi, rami, CP-ovi i slicno (s Vedranom)
 
+Context diagram kao prijedlog idejnog rješenja +
+
 [.thumb]
 image::architecture.jpg[scaledwidth=75%,align="center"]
+
+Dijagram mrežnih resursa +
 
 [.thumb]
 image::egcp-network.jpg[scaledwidth=75%,align="center"]
