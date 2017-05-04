@@ -1,7 +1,13 @@
 ifndef::imagesdir[:imagesdir: images]
 ifndef::sourcedir[:sourcedir: ../../main]
-
 =  EGCP DCS - Digital card system
+:doctype: book
+:encoding: utf-8
+:lang: hr
+:toc: left
+:toc-title: Sadržaj
+:sectnums:
+:imagesdir: ./images
 
 VERZIJE
 
@@ -9,7 +15,6 @@ VERZIJE
 |=========================================================
 |Verzija |Datum |Opis |Autor
 |0.0.1 |02.05.2017. | Inicijalna Verzija | Tihomir Smuđ, Denis Jajčević
-
 |=========================================================
 
 ==  Arhitektura
@@ -23,53 +28,63 @@ image::egcp-network.jpg[scaledwidth=75%,align="center"]
 
 == Hardwareski preduvjeti
 
-JENKINS ?!?
+=== JENKINS ?!?
 --== TODO ==--
 
-NEXUS ?!?
+=== NEXUS ?!?
 --== TODO ==--
 
-OPENSHIFT ?!?
+=== OPENSHIFT ?!?
 --== TODO ==--
 
 
 == Instalacija
 
-*Zajednički preduvjeti:* +
+=== Zajednički preduvjeti
 
-*Update CentOS* +
+==== Update CentOS
+```
 sudo yum install epel-release +
 sudo yum update -y +
 sudo reboot +
+```
 
-*Instalirana Java8 i podešene putanje* +
+==== Instalirana Java8 i podešene putanje
+```
 sudo yum install java-1.8.0-openjdk.x86_64 +
 sudo cp /etc/profile /etc/profile_backup +
 echo 'export JAVA_HOME=/usr/lib/jvm/jre-1.8.0-openjdk' | sudo tee -a /etc/profile +
 echo 'export JRE_HOME=/usr/lib/jvm/jre' | sudo tee -a /etc/profile +
 source /etc/profile +
+```
 
-*Testiranje uspješne instalacije:* +
-java -version +
-echo $JAVA_HOME +
-echo $JRE_HOME +
+==== Testiranje uspješne instalacije:
 
-*JENKINS* +
+* `java -version`
+* `echo $JAVA_HOME`
+* `echo $JRE_HOME`
+
+
+== JENKINS +
 *Download i install Jenkinsa:* +
-sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo +
-sudo rpm --import http://pkg.jenkins-ci.org/redhat-stable/jenkins-ci.org.key +
-sudo yum install jenkins +
 
-*Instaliranje Jenkins servisa* +
-sudo systemctl start jenkins.service +
-sudo systemctl enable jenkins.service +
+. `sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo`
+. `sudo rpm --import http://pkg.jenkins-ci.org/redhat-stable/jenkins-ci.org.key`
+. `sudo yum install jenkins`
+
+*Instaliranje Jenkins servisa*
+
+. `sudo systemctl start jenkins.service`
+. `sudo systemctl enable jenkins.service`
+
 
 *Ako je potrebno propustanje porta na kojem se Jenkins vrti: 8080* +
 sudo firewall-cmd --zone=public --permanent --add-port=8080/tcp +
 sudo firewall-cmd --reload +
 
 
-*NEXUS* +
+=== NEXUS
+
 *Download Nexus* +
 sudo wget https://sonatype-download.global.ssl.fastly.net/nexus/3/nexus-3.3.0-01-unix.tar.gz +
 
@@ -135,7 +150,7 @@ http://bpxco11.mbu.local:8081/repoository/osvg-docker/
 image::nexus-create-repo.jpg[scaledwidth=75%,align="center"]
 
 
-*OPENSHIFT* +
+=== OPENSHIFT
 
 --== TODO ==-- Prema Vedranovim zabilješkama:
 
@@ -158,7 +173,7 @@ Dodavanje repozitorija "centos-release-openshift-origin" +
 
 == Konfiguracija
 
-*JENKINS* +
+=== JENKINS
 Kreiranje joba za build +
     - build projekta +
     - kreiranje docker imagea +
@@ -166,10 +181,10 @@ Kreiranje joba za build +
 Kreiranje joba za deploy +
     - deploy na openshift +
 
-*NEXUS* +
+=== NEXUS
 Kreiranje Repo Bloba za Docker Image
 
-*OPENSHIFT* +
+=== OPENSHIFT
     - Kreiranje namespacea +
     - Kreiranje aplikacije +
     - Kreiranje rute +
