@@ -93,6 +93,93 @@ sudo ln -s /opt/nexus/bin/nexus /etc/init.d/nexus +
 sudo chkconfig --add nexus +
 sudo chkconfig --levels 345 nexus on +
 
+
+
+
+
+
+*OPENSHIFT* +
+
+--== TODO ==-- Prema Vedranovim zabilješkama:
+
+*Preduvjeti:* +
+Dodavanje repozitorija "centos-release-openshift-origin" +
+·       Instalacija paketa: +
+            openshift-ansible, +
+            docker, +
+            net-tools, +
+            bind-utils, +
+            iptables-services (ako je Centos7), +
+            bridge-utils, +
+            origin-client( na "BPXCO11" server + Jenkins i Nexus repo OSS) +
+·       Omogućiti serveru na kojem se pokreće instalacija passwordless login na ostale servere. +
+·       Dodavanje hostova (masters, nodes, lb, etcd) i ostalih opcija, a ima ih dosta u datoteci /etc/ansible/hosts +
+·       Kad je sve spremno pokreće se instalacija naredbom: +
+            ansible-playbook -vvv -i /etc/ansible/hosts /usr/share/ansible/openshift-ansible/playbooks/byo/config.yml > os-install.log +
+·       Sve ostale feature navedene u host fajli će OS sam skinuti i instalirati tjekom instalacije +
+
+
+== Konfiguracija
+
+*JENKINS* +
+
+[.thumb]
+image::Jenkins-login.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::Jenkins-home.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::Jenkins-build.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::Jenkins-deploy-auth-dev-fat.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::Jenkins-deploy-dev.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::Jenkins-deploy-auth-fat.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::Jenkins-credentials.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::Jenkins-credentials-dplesa.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::Jenkins-build-authority.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::Jenkins-build-authority-configuration.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::Jenkins-deploy-authority.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::Jenkins-deploy-dcs-dev.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::Jenkins-deploy-dcs.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::Jenkins-confgure-openshift.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::Jenkins-confgure-docker.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::Jenkins-configure-docker-pipeline-model-definition.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::Jenkins-configure-docker-builder.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::Jenkins-plugins.jpg[scaledwidth=75%,align="center"]
+
+
+*NEXUS* +
+
 Nexus konzola dostupna je na linku:
 http://bpxco11.mbu.local:8081/
 
@@ -139,44 +226,89 @@ http://bpxco11.mbu.local:8081/repoository/osvg-docker/
 image::nexus-create-repo.jpg[scaledwidth=75%,align="center"]
 
 
+
+
 *OPENSHIFT* +
 
---== TODO ==-- Prema Vedranovim zabilješkama:
+Openshit konzola dostupna je na: https://bdxlb12.mbu.local:8443/console/
 
-*Preduvjeti:* +
-Dodavanje repozitorija "centos-release-openshift-origin" +
-·       Instalacija paketa: +
-            openshift-ansible, +
-            docker, +
-            net-tools, +
-            bind-utils, +
-            iptables-services (ako je Centos7), +
-            bridge-utils, +
-            origin-client( na "BPXCO11" server + Jenkins i Nexus repo OSS) +
-·       Omogućiti serveru na kojem se pokreće instalacija passwordless login na ostale servere. +
-·       Dodavanje hostova (masters, nodes, lb, etcd) i ostalih opcija, a ima ih dosta u datoteci /etc/ansible/hosts +
-·       Kad je sve spremno pokreće se instalacija naredbom: +
-            ansible-playbook -vvv -i /etc/ansible/hosts /usr/share/ansible/openshift-ansible/playbooks/byo/config.yml > os-install.log +
-·       Sve ostale feature navedene u host fajli će OS sam skinuti i instalirati tjekom instalacije +
+[.thumb]
+image::openshift-console.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-home.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-overview.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-applications-deployments.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-applications-pods.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-applications-pods-authorityPod.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-applications-pods-authorityDBPod.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-applications-services.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-applications-services-authority.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-applications-services-authority-edit-yaml.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-applications-routes.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-applications-routes-authority.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-applications-routes-authority-edit.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-applications-routes-authority-edit-yaml.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-builds-images.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-builds-imges-egcpauthority.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-builds-imges-egcpauthority-latest.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-resources-membership.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-resources-membership-serviceaccounts.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-resources-secrets.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-resources-secrets-createsecret.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-resources-secrets-edityaml.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-storage.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-authority-storage-create.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::openshift-dcs-overview.jpg[scaledwidth=75%,align="center"]
 
 
-== Konfiguracija
 
-*JENKINS* +
-Kreiranje joba za build +
-    - build projekta +
-    - kreiranje docker imagea +
-    - push docker image to repo +
-Kreiranje joba za deploy +
-    - deploy na openshift +
-
-*NEXUS* +
-Kreiranje Repo Bloba za Docker Image
-
-*OPENSHIFT* +
-    - Kreiranje namespacea +
-    - Kreiranje aplikacije +
-    - Kreiranje rute +
 
 
 
