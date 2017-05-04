@@ -108,6 +108,7 @@ Nexus konzola dostupna je na linku:
 http://bpxco11.mbu.local:8081/
 
 [.thumb]
+.Nexus setup
 image::nexus-setup.jpg[scaledwidth=75%,align="center"]
 
 Predefinirana standardna admin lozinka je u:admin p:admin123 +
