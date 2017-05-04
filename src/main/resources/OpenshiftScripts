@@ -1,0 +1,29 @@
+
+// tag::new-project-authority[]
+oc new-project auhority
+oc secrets new-dockercfg nexus-registry --docker-server=registry.mbu.local --docker-username=docker --docker-password=asdf1234 --docker-email=linux.support@egcp.com
+oc secrets add builder nexus-registry --for=pull
+oc secrets add builder nexus-registry
+oc secrets add deployer nexus-registry --for=pull
+oc secrets add deployer nexus-registry
+oc secrets add default nexus-registry --for=pull
+oc secrets add default nexus-registry
+// end::new-project-authority[]
+
+// tag::new-project-dcs[]
+oc new-project dcs
+oc secrets new-dockercfg nexus-registry --docker-server=registry.mbu.local --docker-username=docker --docker-password=asdf1234 --docker-email=linux.support@egcp.com
+oc secrets add builder nexus-registry --for=pull
+oc secrets add builder nexus-registry
+oc secrets add deployer nexus-registry --for=pull
+oc secrets add deployer nexus-registry
+oc secrets add default nexus-registry --for=pull
+oc secrets add default nexus-registry
+oadm policy add-role-to-user edit system:serviceaccount:dcs:deployer -n dcs
+// end::new-project-dcs[]
+
+
+
+
+
+

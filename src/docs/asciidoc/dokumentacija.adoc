@@ -1,0 +1,273 @@
+ifndef::imagesdir[:imagesdir: images]
+ifndef::sourcedir[:sourcedir: ../../main]
+
+=  EGCP DCS - Digital card system
+
+VERZIJE
+
+[width="80%",cols="2,^3,^15,10",options="header", align="center"]
+|=========================================================
+|Verzija |Datum |Opis |Autor
+|0.0.1 |02.05.2017. | Inicijalna Verzija | Tihomir Smuđ, Denis Jajčević
+
+|=========================================================
+
+==  Arhitektura
+	1. --== TODO ==-- Slika hardverske arhitekture s detaljima o resursima - diskovi, rami, CP-ovi i slicno (s Vedranom)
+
+[.thumb]
+image::architecture.jpg[scaledwidth=75%,align="center"]
+
+[.thumb]
+image::egcp-network.jpg[scaledwidth=75%,align="center"]
+
+== Hardwareski preduvjeti
+
+JENKINS ?!?
+--== TODO ==--
+
+NEXUS ?!?
+--== TODO ==--
+
+OPENSHIFT ?!?
+--== TODO ==--
+
+
+== Instalacija
+
+*Zajednički preduvjeti:* +
+
+*Update CentOS* +
+sudo yum install epel-release +
+sudo yum update -y +
+sudo reboot +
+
+*Instalirana Java8 i podešene putanje* +
+sudo yum install java-1.8.0-openjdk.x86_64 +
+sudo cp /etc/profile /etc/profile_backup +
+echo 'export JAVA_HOME=/usr/lib/jvm/jre-1.8.0-openjdk' | sudo tee -a /etc/profile +
+echo 'export JRE_HOME=/usr/lib/jvm/jre' | sudo tee -a /etc/profile +
+source /etc/profile +
+
+*Testiranje uspješne instalacije:* +
+java -version +
+echo $JAVA_HOME +
+echo $JRE_HOME +
+
+*JENKINS* +
+*Download i install Jenkinsa:* +
+sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo +
+sudo rpm --import http://pkg.jenkins-ci.org/redhat-stable/jenkins-ci.org.key +
+sudo yum install jenkins +
+
+*Instaliranje Jenkins servisa* +
+sudo systemctl start jenkins.service +
+sudo systemctl enable jenkins.service +
+
+*Ako je potrebno propustanje porta na kojem se Jenkins vrti: 8080* +
+sudo firewall-cmd --zone=public --permanent --add-port=8080/tcp +
+sudo firewall-cmd --reload +
+
+
+*NEXUS* +
+*Download Nexus* +
+sudo wget https://sonatype-download.global.ssl.fastly.net/nexus/3/nexus-3.3.0-01-unix.tar.gz +
+
+*Unzip Nexus* +
+sudo tar -xvf nexus-3.3.0-01-unix.tar.gz +
+
+*Dodati usera* +
+sudo adduser nexus +
+
+*Prilagoditi prava* +
+sudo chown -R nexus:nexus /app/nexus +
+Editirati /opt/nexus/bin/nexus.rc file i odkomentirati run_as_user parameter da glasi ovako: +
+run_as_user="nexus" +
+
+*Instaliranje Nexus servisa* +
+sudo ln -s /opt/nexus/bin/nexus /etc/init.d/nexus +
+sudo chkconfig --add nexus +
+sudo chkconfig --levels 345 nexus on +
+
+Nexus konzola dostupna je na linku:
+http://bpxco11.mbu.local:8081/
+
+[.thumb]
+image::nexus-setup.jpg[scaledwidth=75%,align="center"]
+
+Predefinirana standardna admin lozinka je u:admin p:admin123 +
+Nakon što se logiramo, promjenimo te vrijednosti u admin sekciji nexusa u gornjem desnom kutu +
+Inicijalna admin user lozinka promjenjena u u:admin p:asdf1234 +
+
+U sekciji administracije i konfuguriranja nexus repozitorija prvo kreiramo blob store +
+koji predstavlja fizičku lokaciju gdje će biti smješteni docker imagei.
+
+[.thumb]
+image::nexus-repo-admin.jpg[scaledwidth=75%,align="center"]
+
+Klikne se na: Create blob store i popune podaci kao što je prikazano na slici:
+
+[.thumb]
+image::nexus-create-blob.jpg[scaledwidth=75%,align="center"]
+
+Zatim se vrati u sekciju administracije i konfuguriranja nexus repozitorija i klikne na: +
+Repositories --> Create repository +
+
+Na prvom ekranu između tri ponuđena docker recipea odabere se Hosted +
+
+[.thumb]
+image::nexus-create-repo-select-recipe.jpg[scaledwidth=75%,align="center"]
+
+Na sljedećem ekranu se upišu podaci:
+
+Name: osvg-docker
+HTTP conector at specified port: 8082 (registry.mbu.local dns zapis gledat će na taj port ovoga repozitorija: bpxco11.mbu.local:8082) +
+te se izabere osvg-docker blob store
+
+[.thumb]
+image::nexus-create-repo-data.jpg[scaledwidth=75%,align="center"]
+
+Nakon kreiranja repozitorija na pregledu istih imamo copy button koji nam daje URL +
+do novokreiranog repozitorija +
+http://bpxco11.mbu.local:8081/repoository/osvg-docker/
+
+[.thumb]
+image::nexus-create-repo.jpg[scaledwidth=75%,align="center"]
+
+
+*OPENSHIFT* +
+
+--== TODO ==-- Prema Vedranovim zabilješkama:
+
+*Preduvjeti:* +
+Dodavanje repozitorija "centos-release-openshift-origin" +
+·       Instalacija paketa: +
+            openshift-ansible, +
+            docker, +
+            net-tools, +
+            bind-utils, +
+            iptables-services (ako je Centos7), +
+            bridge-utils, +
+            origin-client( na "BPXCO11" server + Jenkins i Nexus repo OSS) +
+·       Omogućiti serveru na kojem se pokreće instalacija passwordless login na ostale servere. +
+·       Dodavanje hostova (masters, nodes, lb, etcd) i ostalih opcija, a ima ih dosta u datoteci /etc/ansible/hosts +
+·       Kad je sve spremno pokreće se instalacija naredbom: +
+            ansible-playbook -vvv -i /etc/ansible/hosts /usr/share/ansible/openshift-ansible/playbooks/byo/config.yml > os-install.log +
+·       Sve ostale feature navedene u host fajli će OS sam skinuti i instalirati tjekom instalacije +
+
+
+== Konfiguracija
+
+*JENKINS* +
+Kreiranje joba za build +
+    - build projekta +
+    - kreiranje docker imagea +
+    - push docker image to repo +
+Kreiranje joba za deploy +
+    - deploy na openshift +
+
+*NEXUS* +
+Kreiranje Repo Bloba za Docker Image
+
+*OPENSHIFT* +
+    - Kreiranje namespacea +
+    - Kreiranje aplikacije +
+    - Kreiranje rute +
+
+
+
+
+
+== Kreiranje Aplikacija u Openshiftu
+
+oc new-project auhority
+oc secrets new-dockercfg nexus-registry --docker-server=registry.mbu.local --docker-username=docker --docker-password=asdf1234 --docker-email=linux.support@egcp.com
+oc secrets add builder nexus-registry --for=pull
+oc secrets add builder nexus-registry
+oc secrets add deployer nexus-registry --for=pull
+oc secrets add deployer nexus-registry
+oc secrets add default nexus-registry --for=pull
+oc secrets add default nexus-registry
+
+oc new-project dcs
+oc secrets new-dockercfg nexus-registry --docker-server=registry.mbu.local --docker-username=docker --docker-password=asdf1234 --docker-email=linux.support@egcp.com
+oc secrets add builder nexus-registry --for=pull
+oc secrets add builder nexus-registry
+oc secrets add deployer nexus-registry --for=pull
+oc secrets add deployer nexus-registry
+oc secrets add default nexus-registry --for=pull
+oc secrets add default nexus-registry
+oadm policy add-role-to-user edit system:serviceaccount:dcs:deployer -n dcs
+
+
+== Lokalno testiranje Openshifta na strani developera
+
+Verzija Openshifta spremna za testiranje koja radi na Vagrantu
+sastoji se od 1 mastera ali dovoljna za testiranje rada Openshifta.
+
+Skinuti posljednju verziju vagrant bundlea za openshift zvanog minishift
+get minishift from: https://github.com/minishift/minishift/releases
+instal minishift from: https://docs.openshift.org/latest/minishift/getting-started/installing.html#install-prerequisites
+
+Defaultni windows VM hypervisor, Hyper-V, ne radi ako imate i koristite na windowsima Virtualbox, stoga treba pokretati minishift sa:
+minishift start --vm-driver=virtualbox
+
+Preporuka prvi puta pozvati minishift sa parametrima resursa: 12GB RAM 3 CPUa
+minishift start --memory 12048 --cpus 3
+
+minishift start --memory 12048 --cpus 3 --vm-driver virtualbox
+
+access Openshift:
+Iako nije pisalo u konzoli navodno se prvi puta logira kao u:developer p:developer
+The server is accessible via web console at:
+    https://192.168.99.100:8443
+To login as administrator:
+    oc login -u system:admin
+
+Da bi dobili binary u Path izvrsiti komandu:
+minishift oc-env
+te izvrsiti komandu koja vam ovisno o OSu ce izgledati otprilike ovako
+SET PATH=c:\xMINISHIFT\cache\oc\v1.5.0;%PATH%
+
+nadalje vam je oc dostupan
+
+[source,java]
+Dockerfile:
+----
+include::Dockerfile[indent=0]
+----
+
+[source, java]
+Jenkinsfile:
+----
+include::Jenkinsfile[indent=0]
+----
+
+[source,java]
+Kreiranje authority aplikacije u Openshiftu:
+----
+include::OpenshiftScripts[tag=new-project-authority, indent=0]
+----
+
+[source,java]
+Kreiranje dcs aplikacije u Openshiftu:
+----
+include::OpenshiftScripts[tag=new-project-dcs, indent=0]
+----
+
+
+
+	2. Koraci instalacije OS na njih (s Vedranom)
+	3. Koraci instalacije Nexusa
+		- Apache proxy za SSL terminaciju plus postupak potpisivanja certa
+	4. Koraci instalacije Jenkinsa
+		- ovdje napomenut i OC tool koji treba za trigeriranje updatea aplikacije na OS-u
+
+==  Konfiguracija (redom kako je prakticno)
+	1. Konfiguracija Nexusa (tu sam ti ja za pitanja)
+	2. Konfiguracija Jenkinsa (tu sam ti i ja za pitanja)
+	3. Konfiguracija OS-a (s Vedranom)
+		- ovdje ce trebat rec kako:
+			a) kreirat namespace
+			b) dodat aplikaciju
+			c) kreirat rutu...
