@@ -1,3 +1,4 @@
+```
 #!groovy
 node {
 
@@ -19,14 +20,15 @@ node {
                         workspaceUpdater: [$class: 'CheckoutUpdater']])
         }
 
+    stage('checkout') {
+        checkout scm
+    }
 
-
-        stage("Deploy artifacts") {
+        stage("Prepare artifacts") {
                 configFileProvider([configFile(fileId: '4d3f9e68-7bf2-40e9-8d7e-3363b0410760', variable: 'MAVEN_SETTINGS')]) {
                         withMaven(maven: 'M3', globalMavenSettingsConfig: '4d3f9e68-7bf2-40e9-8d7e-3363b0410760') {
                                 // Run the maven build
                                 sh 'mvn clean package -DskipDocker'
-
                         }
                 }
         }
@@ -51,16 +53,6 @@ ENV JAVA_OPTS=""
 ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar /app.jar" ]'''
         }
 
-        stage("Deploy artifacts") {
-                configFileProvider([configFile(fileId: '4d3f9e68-7bf2-40e9-8d7e-3363b0410760', variable: 'MAVEN_SETTINGS')]) {
-                        withMaven(maven: 'M3', globalMavenSettingsConfig: '4d3f9e68-7bf2-40e9-8d7e-3363b0410760') {
-                                // Run the maven build
-                                sh 'mvn clean package -DskipDocker'
-
-                        }
-                }
-        }
-
         def image
         docker.withRegistry('https://registry.mbu.local', 'docker') {
                 stage("\u2622 CREATE DOCKER IMAGE") {
@@ -82,3 +74,4 @@ ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -Djava.security.egd=file:/dev/./urando
                 }
         }
 }
+```

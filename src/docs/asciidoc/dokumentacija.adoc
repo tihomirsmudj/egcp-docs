@@ -18,9 +18,8 @@ VERZIJE
 |=========================================================
 
 ==  Arhitektura
-	1. --== TODO ==-- Slika hardverske arhitekture s detaljima o resursima - diskovi, rami, CP-ovi i slicno (s Vedranom)
 
-Context diagram kao prijedlog idejnog rješenja +
+Kontekstni dijagram kao prijedlog idejnog rješenja +
 
 [.thumb]
 image::architecture.jpg[scaledwidth=75%,align="center"]
@@ -41,6 +40,8 @@ image::egcp-network.jpg[scaledwidth=75%,align="center"]
 === OPENSHIFT ?!?
 --== TODO ==--
 
+--== TODO ==-- Slika hardverske arhitekture s detaljima o resursima - diskovi, ram, CP-ovi i slicno (s Vedranom)
+
 
 == Instalacija
 
@@ -53,7 +54,7 @@ sudo yum update -y +
 sudo reboot +
 ```
 
-==== Instalirana Java8 i podešene putanje
+==== Instalirana Java 8 i podešene putanje
 ```
 sudo yum install java-1.8.0-openjdk.x86_64 +
 sudo cp /etc/profile /etc/profile_backup +
@@ -68,8 +69,49 @@ source /etc/profile +
 * `echo $JAVA_HOME`
 * `echo $JRE_HOME`
 
+==== SSL terminacija i ispravno podešeni certifikati
 
-== JENKINS +
+1. Request na nekom serveru na kojem je potreban certifkat:
+
+* `openssl req -config /etc/pki/tls/openssl.cnf -key /etc/pki/tls/private/registry.mbu.local.key -new -sha256 -out /etc/pki/tls/certs/registry.mbu.local.csr`
+
+2. Copy & paste CSR-a na CA server
+
+3. Potpisivanje certifikata na CA serveru:
+
+* `openssl ca -config /etc/pki/tls/openssl.cnf -extensions policy_optional -days 65000 -notext -md sha256 -cert /etc/origin/master/ca.crt -keyfile /etc/origin/master/ca.key
+-in /etc/pki/tls/certs/registry.mbu.local.csr -out /etc/pki/tls/certs/registry.mbu.local.crt –verbose`
+
+4. Copy & paste potpisanog CRT-a na server na koji instaliramo certikfat
+
+Napomena:
+Koristiti OS-ov CA (neće raditi sa drugim certifikatima).
+                                Obavezno provjeriti /etc/pki/tls/openssl.cnf i pripadajući policy, te alternate names (wildcard mora bit podržan):
+
+```
+[ policy_match ]
+#countryName            = match
+#stateOrProvinceName    = match
+#organizationName       = match
+countryName             = optional
+stateOrProvinceName     = optional
+organizationName        = optional
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
+
+
+####################################################################
+
+[ alternate_names ]
+
+DNS.1       = *.mbu.local
+DNS.2       = mbu.local
+DNS.3       = egcp.com
+```
+
+
+=== JENKINS +
 *Download i install Jenkinsa:* +
 
 . `sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo`
@@ -83,37 +125,38 @@ source /etc/profile +
 
 
 *Ako je potrebno propustanje porta na kojem se Jenkins vrti: 8080* +
-sudo firewall-cmd --zone=public --permanent --add-port=8080/tcp +
-sudo firewall-cmd --reload +
+
+. `sudo firewall-cmd --zone=public --permanent --add-port=8080/tcp`
+. `sudo firewall-cmd --reload`
 
 
 === NEXUS
 
 *Download Nexus* +
-sudo wget https://sonatype-download.global.ssl.fastly.net/nexus/3/nexus-3.3.0-01-unix.tar.gz +
+. `sudo wget https://sonatype-download.global.ssl.fastly.net/nexus/3/nexus-3.3.0-01-unix.tar.gz`
 
 *Unzip Nexus* +
-sudo tar -xvf nexus-3.3.0-01-unix.tar.gz +
+. `sudo tar -xvf nexus-3.3.0-01-unix.tar.gz`
 
 *Dodati usera* +
-sudo adduser nexus +
+. `sudo adduser nexus`
 
 *Prilagoditi prava* +
-sudo chown -R nexus:nexus /app/nexus +
-Editirati /opt/nexus/bin/nexus.rc file i odkomentirati run_as_user parameter da glasi ovako: +
-run_as_user="nexus" +
+. `sudo chown -R nexus:nexus /app/nexus`
+
+*Editirati file* +
+. `/opt/nexus/bin/nexus.rc`
+
+*Odkomentirati* run_as_user *parameter da glasi ovako:* +
+. `run_as_user="nexus"`
 
 *Instaliranje Nexus servisa* +
-sudo ln -s /opt/nexus/bin/nexus /etc/init.d/nexus +
-sudo chkconfig --add nexus +
-sudo chkconfig --levels 345 nexus on +
+. `sudo ln -s /opt/nexus/bin/nexus /etc/init.d/nexus`
+. `sudo chkconfig --add nexus`
+. `sudo chkconfig --levels 345 nexus on`
 
 
-
-
-
-
-*OPENSHIFT* +
+=== OPENSHIFT +
 
 --== TODO ==-- Prema Vedranovim zabilješkama:
 
@@ -136,16 +179,28 @@ Dodavanje repozitorija "centos-release-openshift-origin" +
 
 == Konfiguracija
 
-*JENKINS* +
+=== JENKINS +
+
+Jenkins konzola dostupna je na linku:
+http://bpxco11.mbu.local:8081/
+
+Stndardna admin lozinka promjenjena je u u:admin p:asdf1234
 
 [.thumb]
 image::Jenkins-login.jpg[scaledwidth=75%,align="center"]
 
+Nakon logina prikazati će se Jenkinsov dashboard sa svim jobovima +
+Zbog preglednosti jobovi su podijeljeni po tabovima +
+
 [.thumb]
 image::Jenkins-home.jpg[scaledwidth=75%,align="center"]
 
+Na prvom build tabu su jobovi koji su pipelineovi koji Jenkinsfile skriptu uzimaju iz SCM-a +
+
 [.thumb]
 image::Jenkins-build.jpg[scaledwidth=75%,align="center"]
+
+Ostali tabovi sadrže jobove koji su Openshift plugin jobovi konfigurirani da rade deploy pojedinih aplikacija
 
 [.thumb]
 image::Jenkins-deploy-auth-dev-fat.jpg[scaledwidth=75%,align="center"]
@@ -156,17 +211,43 @@ image::Jenkins-deploy-dev.jpg[scaledwidth=75%,align="center"]
 [.thumb]
 image::Jenkins-deploy-auth-fat.jpg[scaledwidth=75%,align="center"]
 
+Pregled Jenkinsovih security credentialsa
+
 [.thumb]
 image::Jenkins-credentials.jpg[scaledwidth=75%,align="center"]
+
+Credential koji se koristi u svim build jobovima za izradu snapshota
 
 [.thumb]
 image::Jenkins-credentials-dplesa.jpg[scaledwidth=75%,align="center"]
 
+Pregled build joba authority sa prikazom uspješnosti izvođenja pojedninh stageova definiranih u Jenkinsfile-u u rootu pojedinog projekta u ovo slučaju authority projekta
+
 [.thumb]
 image::Jenkins-build-authority.jpg[scaledwidth=75%,align="center"]
 
+Pri kreiranju novog builda potrebno je upisati podatke kao na slici te ovisno o projektu +
+URL Repozitorija: +
+```
+https://devbuild.mbu.local:9443/svn/java/Microservices/ms-authority/trunk
+https://devbuild.mbu.local:9443/svn/java/Microservices/ms-b24connector/trunk
+https://devbuild.mbu.local:9443/svn/java/Microservices/DCS/dcard/trunk
+https://devbuild.mbu.local:9443/svn/java/Microservices/DCS/dsip/trunk
+https://devbuild.mbu.local:9443/svn/java/Microservices/DCS/fcard/trunk
+```
+
 [.thumb]
 image::Jenkins-build-authority-configuration.jpg[scaledwidth=75%,align="center"]
+
+Za deploy jobove koristimo openshift plugin zbog jednostavnosti
+
+VAŽNO!!! +
+Kod trenutno korištenog plugina za Openshift postoji bug da se ne prikazuju vrijednosti polja +
+Command to pass into the 2oc" binary i Arguments associated with the above command +
+tako da ako se nešto mijenja na ovom jobu treba svaki put iznova unijeti vrijednosti: +
+
+Command: . `import-image`
+Arguments: . `registry.mbu.local/${ime_projekta}`
 
 [.thumb]
 image::Jenkins-deploy-authority.jpg[scaledwidth=75%,align="center"]
@@ -177,23 +258,37 @@ image::Jenkins-deploy-dcs-dev.jpg[scaledwidth=75%,align="center"]
 [.thumb]
 image::Jenkins-deploy-dcs.jpg[scaledwidth=75%,align="center"]
 
+Konfiguracija koju je potrebno odraditi prije kreiranja deploy jobova da ju može koristiti openshift plugin +
+Credentials se ostavlja prazan jer će se za svaku aplikaciju koristiti drugi deployer credentials koji se definira +
+u postavkama openshift plugina pojedinog joba
+
 [.thumb]
 image::Jenkins-confgure-openshift.jpg[scaledwidth=75%,align="center"]
 
+--== TODO ==-- koristi se samo u testiranju pusha docker imagea na nexus repozitorij
+
 [.thumb]
-image::Jenkins-confgure-docker.jpg[scaledwidth=75%,align="center"]
+image::Jenkins-configure-docker.jpg[scaledwidth=75%,align="center"]
+
+--== TODO ==-- ne koristi se?!?
 
 [.thumb]
 image::Jenkins-configure-docker-pipeline-model-definition.jpg[scaledwidth=75%,align="center"]
 
+--== TODO ==-- ne koristi se?!?
+
 [.thumb]
 image::Jenkins-configure-docker-builder.jpg[scaledwidth=75%,align="center"]
+
+Jenkins pluginovi za openshift koji se koriste +
+Instaliraju se tako da se u Jenkins plugin manageru na tabu Available filtrira po ključnoj riječi openshift +
+te se označe i instaliraju
 
 [.thumb]
 image::Jenkins-plugins.jpg[scaledwidth=75%,align="center"]
 
 
-*NEXUS* +
+=== NEXUS +
 
 Nexus konzola dostupna je na linku:
 http://bpxco11.mbu.local:8081/
@@ -244,17 +339,25 @@ image::nexus-create-repo.jpg[scaledwidth=75%,align="center"]
 
 === OPENSHIFT
 
+Openshit konzola dostupna je na linku: +
+https://bdxlb12.mbu.local:8443/console/
 
-Openshit konzola dostupna je na: https://bdxlb12.mbu.local:8443/console/
+Predefinirana standardna admin lozinka je u:osadmin p:asdf1234 +
 
 [.thumb]
 image::openshift-console.jpg[scaledwidth=75%,align="center"]
 
+Nakon logina prikažu se sve svi dostupni projekti
+
 [.thumb]
 image::openshift-home.jpg[scaledwidth=75%,align="center"]
 
+Kada se odabere projekt prikaže se overview projekta sa svim relevantnim podacima za taj projekt
+
 [.thumb]
 image::openshift-authority-overview.jpg[scaledwidth=75%,align="center"]
+
+
 
 [.thumb]
 image::openshift-authority-applications-deployments.jpg[scaledwidth=75%,align="center"]
@@ -324,8 +427,8 @@ image::openshift-dcs-overview.jpg[scaledwidth=75%,align="center"]
 
 
 
-== Kreiranje Aplikacija u Openshiftu
-
+==== Kreiranje Aplikacija u Openshiftu
+```
 oc new-project auhority
 oc secrets new-dockercfg nexus-registry --docker-server=registry.mbu.local --docker-username=docker --docker-password=asdf1234 --docker-email=linux.support@egcp.com
 oc secrets add builder nexus-registry --for=pull
@@ -344,38 +447,40 @@ oc secrets add deployer nexus-registry
 oc secrets add default nexus-registry --for=pull
 oc secrets add default nexus-registry
 oadm policy add-role-to-user edit system:serviceaccount:dcs:deployer -n dcs
+```
 
+== ANNEX
+=== Lokalno testiranje Openshifta na strani developera
 
-== Lokalno testiranje Openshifta na strani developera
+Verzija Openshifta spremna za testiranje koja radi na Vagrantu +
+sastoji se od 1 mastera ali dovoljna za testiranje rada Openshifta. +
 
-Verzija Openshifta spremna za testiranje koja radi na Vagrantu
-sastoji se od 1 mastera ali dovoljna za testiranje rada Openshifta.
+Skinuti posljednju verziju vagrant bundlea za openshift zvanog minishift +
+get minishift from: https://github.com/minishift/minishift/releases +
+instal minishift from: https://docs.openshift.org/latest/minishift/getting-started/installing.html#install-prerequisites +
 
-Skinuti posljednju verziju vagrant bundlea za openshift zvanog minishift
-get minishift from: https://github.com/minishift/minishift/releases
-instal minishift from: https://docs.openshift.org/latest/minishift/getting-started/installing.html#install-prerequisites
+Defaultni windows VM hypervisor, Hyper-V, ne radi ako imate i koristite na windowsima Virtualbox, stoga treba pokretati minishift sa: +
+. `minishift start --vm-driver=virtualbox`
 
-Defaultni windows VM hypervisor, Hyper-V, ne radi ako imate i koristite na windowsima Virtualbox, stoga treba pokretati minishift sa:
-minishift start --vm-driver=virtualbox
+Preporuka prvi puta pozvati minishift sa parametrima resursa: 12GB RAM 3 CPUa +
+. `minishift start --memory 12048 --cpus 3`
 
-Preporuka prvi puta pozvati minishift sa parametrima resursa: 12GB RAM 3 CPUa
-minishift start --memory 12048 --cpus 3
+Dakle ako se radi o windows okolini dolazimo do: +
+. `minishift start --memory 12048 --cpus 3 --vm-driver virtualbox`
 
-minishift start --memory 12048 --cpus 3 --vm-driver virtualbox
+access Openshift: +
+Iako nije pisalo u konzoli navodno se prvi puta logira kao u:developer p:developer +
+The server is accessible via web console at: +
+    https://192.168.99.100:8443 +
+To login as administrator: +
+    oc login -u system:admin +
 
-access Openshift:
-Iako nije pisalo u konzoli navodno se prvi puta logira kao u:developer p:developer
-The server is accessible via web console at:
-    https://192.168.99.100:8443
-To login as administrator:
-    oc login -u system:admin
+Da bi dobili binary u Path izvrsiti komandu: +
+. `minishift oc-env`
 
-Da bi dobili binary u Path izvrsiti komandu:
-minishift oc-env
-te izvrsiti komandu koja vam ovisno o OSu ce izgledati otprilike ovako
-SET PATH=c:\xMINISHIFT\cache\oc\v1.5.0;%PATH%
+te izvrsiti komandu koja vam ovisno o OSu ce izgledati otprilike ovako +
+. `SET PATH=c:\xMINISHIFT\cache\oc\v1.5.0;%PATH%`
 
-nadalje vam je oc dostupan
 
 [source,java]
 Dockerfile:
