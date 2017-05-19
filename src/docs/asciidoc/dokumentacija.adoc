@@ -11,10 +11,11 @@ ifndef::sourcedir[:sourcedir: ../../main]
 
 VERZIJE
 
-[width="80%",cols="2,^3,^15,10",options="header", align="center"]
+[width="80%",cols="2,^3,<15,10",options="header", align="center"]
 |=========================================================
-|Verzija |Datum |Opis |Autor
-|0.0.1 |02.05.2017. | Inicijalna Verzija | Tihomir Smuđ, Denis Jajčević
+|Verzija |Datum |Opis |Autor(i)
+|0.0.1 | 02.05.2017. | Inicijalna Verzija | Tihomir Smuđ, Denis Jajčević
+|0.0.2 | 18.05.2017. | Ispravci i dodaci | Denis Jajčević
 |=========================================================
 
 ==  Arhitektura
@@ -28,7 +29,7 @@ image::architecture.jpg[scaledwidth=75%,align="center"]
 Dijagram mrežnih resursa +
 
 [.thumb]
-image::egcp-network.jpg[scaledwidth=75%,align="center"]
+image::egcp-network.svg[scaledwidth=75%,align="center"]
 
 == Hardwareski preduvjeti
 
