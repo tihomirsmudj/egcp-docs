@@ -1,0 +1,77 @@
+```
+#!groovy
+node {
+
+        stage('checkout') {
+                checkout([$class: 'SubversionSCM',
+                        additionalCredentials: [],
+                        excludedCommitMessages: '',
+                        excludedRegions: '',
+                        excludedRevprop: '',
+                        excludedUsers: '',
+                        filterChangelog: false,
+                        ignoreDirPropChanges: false,
+                        includedRegions: '',
+                        locations: [[credentialsId: '2747cfb4-f0e2-4abb-adca-056e1cc7e356',
+                        depthOption: 'infinity',
+                        ignoreExternalsOption: true,
+                        local: '.',
+                        remote: 'https://devbuild.mbu.local:9443/svn/java/Microservices/ms-authority/trunk']],
+                        workspaceUpdater: [$class: 'CheckoutUpdater']])
+        }
+
+    stage('checkout') {
+        checkout scm
+    }
+
+        stage("Prepare artifacts") {
+                configFileProvider([configFile(fileId: '4d3f9e68-7bf2-40e9-8d7e-3363b0410760', variable: 'MAVEN_SETTINGS')]) {
+                        withMaven(maven: 'M3', globalMavenSettingsConfig: '4d3f9e68-7bf2-40e9-8d7e-3363b0410760') {
+                                // Run the maven build
+                                sh 'mvn clean package -DskipDocker'
+                        }
+                }
+        }
+
+        def artifactVersion
+        def artifactName
+
+        stage('Update pom.xml') {
+                def pom = readMavenPom file: 'pom.xml'
+            pom.build.finalName = "app"
+            echo pom.build.finalName
+            writeMavenPom model: pom
+        }
+
+        stage('Prepare Dockerfile') {
+                    writeFile file: 'Dockerfile', text: '''
+FROM java:8
+VOLUME /tmp
+ADD /target/app.jar app.jar
+RUN bash -c 'touch /app.jar'
+ENV JAVA_OPTS=""
+ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar /app.jar" ]'''
+        }
+
+        def image
+        docker.withRegistry('https://registry.mbu.local', 'docker') {
+                stage("\u2622 CREATE DOCKER IMAGE") {
+                        try{
+                                docker.withRegistry('https://registry.mbu.local', 'docker') {
+                                        image = docker.build('egcp-authority')
+                        }
+                        } catch(e) {
+                                throw e
+                        }
+                }
+
+                stage("\u2622 PUSH DOCKER IMAGE") {
+                        try {
+                                image.push('latest')
+                        } catch(e) {
+                                throw e
+                        }
+                }
+        }
+}
+```
