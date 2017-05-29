@@ -15,14 +15,13 @@ VERZIJE
 |=========================================================
 |Verzija |Datum |Opis |Autor(i)
 |0.0.1 | 02.05.2017. | Inicijalna Verzija | Tihomir Smuđ, Denis Jajčević
-|0.0.2 | 18.05.2017. | Ispravci i dodaci | Denis Jajčević
 |=========================================================
 
 ==  Arhitektura
 
 [.thumb]
 .Kontekstni dijagram kao prijedlog idejnog rješenja
-image::architecture.jpg[scaledwidth=75%,align="center"]
+image::architecture.svg[scaledwidth=75%,align="center"]
 
 [.thumb]
 .Dijagram mrežnih resursa
@@ -30,16 +29,46 @@ image::egcp-network.svg[scaledwidth=75%,align="center"]
 
 == Hardwareski preduvjeti
 
-=== JENKINS ?!?
---== TODO ==--
+=== JENKINS
 
-=== NEXUS ?!?
---== TODO ==--
+[width="80%",cols="2,10,<10,10",options="header", align="center"]
+|=========================================================
+|Konfiguracija |JVM |RAM |HDD
+|Minimalno | Java 7 | 256 MB | 1GB+
+|Preporučeno | Java 8 | 1GB+ | 50GB+
+|=========================================================
 
-=== OPENSHIFT ?!?
---== TODO ==--
+=== NEXUS
+[width="80%",cols="2,10,<10,10",options="header", align="center"]
+|=========================================================
+|Konfiguracija |JVM |RAM |HDD
+|Minimalno | Java 7u2 | 256 MB | 1GB+
+|Preporučeno | latest | 1GB+ | 50GB+
+|=========================================================
 
---== TODO ==-- Slika hardverske arhitekture s detaljima o resursima - diskovi, ram, CP-ovi i slicno (s Vedranom)
+=== OPENSHIFT
+
+Preduvjeti ovise o tipu hosta
+
+[width="90%",cols="10,10,<10,10",options="header", align="center"]
+|=========================================================
+|Tip | CPU | RAM minimum | HDD minimum
+|Master | 2 vCPU | 8 GB | 30 GB
+|Node | 1 vCPU | 8 GB | 15 GB
+|=========================================================
+
+Zajednički preduvjeti: +
+Fizički/virtualni sutav ili instanca public/private IaaS. +
+Operativni sustav: Red Hat Enterprise Linux (RHEL) 7.1 sa "Minimalnom" instalacijskim opcijama +
+
+Docker 1.6.2+ +
+Dodatnih 15 GB nealociranog prostora za konfiguraciju docker storage-a. +
+
+== Hardware - izvedeno
+
+[.thumb]
+.Hardwareski resursi
+image::egcp-hardware.svg[scaledwidth=75%,align="center"]
 
 
 == Instalacija
@@ -238,6 +267,10 @@ Kako bi se _OpenShift Client Plugin_ mogao koristiti potrebno ga je konfigurirat
 U glavnom izborniku odabrati: Jenkins -> Manage Jenkins -> Configure System
 
 Credentials se ostavlja prazan jer će se za svaku aplikaciju koristiti drugi `deployer` credentials koji se definira u postavkama openshift plugina pojedinog joba.
+
+WARNING: Kod trenutno korištenog plugina za Openshift postoji bug da se ne prikazuju vrijednosti polja +
+         Command to pass into the 2oc" binary i Arguments associated with the above command +
+         tako da ako se nešto mijenja na ovom jobu treba svaki put iznova unijeti vrijednosti:
 
 [.thumb]
 .Jenkins OpenShift Client Plugin konfiguracija
@@ -478,44 +511,3 @@ Da bi dobili binary u Path izvrsiti komandu: +
 te izvrsiti komandu koja vam ovisno o OSu ce izgledati otprilike ovako +
 . `SET PATH=c:\xMINISHIFT\cache\oc\v1.5.0;%PATH%`
 
-
-[source,java]
-Dockerfile:
-----
-include::Dockerfile[indent=0]
-----
-
-[source, java]
-Jenkinsfile:
-----
-include::Jenkinsfile[indent=0]
-----
-
-[source,java]
-Kreiranje authority aplikacije u Openshiftu:
-----
-include::OpenshiftScripts[tag=new-project-authority, indent=0]
-----
-
-[source,java]
-Kreiranje dcs aplikacije u Openshiftu:
-----
-include::OpenshiftScripts[tag=new-project-dcs, indent=0]
-----
-
-
-
-	2. Koraci instalacije OS na njih (s Vedranom)
-	3. Koraci instalacije Nexusa
-		- Apache proxy za SSL terminaciju plus postupak potpisivanja certa
-	4. Koraci instalacije Jenkinsa
-		- ovdje napomenut i OC tool koji treba za trigeriranje updatea aplikacije na OS-u
-
-==  Konfiguracija (redom kako je prakticno)
-	1. Konfiguracija Nexusa (tu sam ti ja za pitanja)
-	2. Konfiguracija Jenkinsa (tu sam ti i ja za pitanja)
-	3. Konfiguracija OS-a (s Vedranom)
-		- ovdje ce trebat rec kako:
-			a) kreirat namespace
-			b) dodat aplikaciju
-			c) kreirat rutu...
