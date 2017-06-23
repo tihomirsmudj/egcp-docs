@@ -1,7 +1,7 @@
 ```
 #!groovy
 node {
-
+// tag::stage_checkout[]
         stage('checkout') {
                 checkout([$class: 'SubversionSCM',
                         additionalCredentials: [],
@@ -19,6 +19,7 @@ node {
                         remote: 'https://devbuild.mbu.local:9443/svn/java/Microservices/ms-authority/trunk']],
                         workspaceUpdater: [$class: 'CheckoutUpdater']])
         }
+// end::stage_checkout[]
 
     stage('checkout') {
         checkout scm

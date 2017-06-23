@@ -194,12 +194,15 @@ sudo chkconfig --levels 345 nexus on
 .. `origin-client` (na "BPXCO11" server + Jenkins i Nexus repo OSS)
 . Omogućiti serveru na kojem se pokreće instalacija _passwordless login_ na ostale servere.
 . Dodavanje hostova (masters, nodes, lb, etcd) i ostalih opcija, a ima ih dosta u datoteci `/etc/ansible/hosts`
+
+NOTE: link:hosts[/etc/ansible/hosts]
+
 . Kad je sve spremno pokreće se instalacija naredbom:
 .. `ansible-playbook -vvv -i /etc/ansible/hosts /usr/share/ansible/openshift-ansible/playbooks/byo/config.yml > os-install.log`
 .. logovi se mogu pratiti tailanjem datoteke `os-install.log`
 . Sve ostale feature navedene u host fajli će OS sam skinuti i instalirati tjekom instalacije
 
-NOTE: TODO - popunit s /etc/ansible/hosts datotekom
+
 
 == Konfiguracija
 
@@ -226,6 +229,45 @@ Na prvom build tabu su jobovi koji su pipelineovi koji Jenkinsfile skriptu uzima
 [.thumb]
 .Jenkins _Builds_ tab
 image::Jenkins-build.jpg[scaledwidth=75%,align="center"]
+
+Sadržaj Jenkinsfile konfiguracijske datoteke +
+
+.Jenkinsfile - Definiranje varijabli za kasniju upotrebu u skripti
+----
+include::Jenkinsfile[tag=define_variables]
+----
+
+.Jenkinsfile - Prvo se napravi checkout sa SCM-a +
+ako postoji definiran SCM na razini Jenkinsa
+----
+include::Jenkinsfile[tag=stage_checkout]
+----
+
+ako NE postoji definiran SCM na razini Jenkinsa ili za potrebe testiranja +
+----
+include::Jenkinsfile2[tag=stage_checkout]
+----
+
+.Jenkinsfile - Pokrenemo Maven komandu "clean package" za kreiranje artefakata
+----
+include::Jenkinsfile[tag=stage_deploy]
+----
+
+.Jenkinsfile - Za potrebe lakšeg testiranja smo kreirali Dockerfile unutar Jenkinsfilea kako bi izbjegli opetovano deployanje svake nove verzije Dockerfilea u SCM
+----
+include::Jenkinsfile[tag=stage_prepare_dockerfile]
+----
+NOTE: ovo će biti višak jednom kad finalna verzija bude gotova
+
+.Jenkinsfile - Kreiramo docker image i pushamo ga u repozitorij docker imagea na Nexusu: +
+----
+include::Jenkinsfile[tag=stage_dockerpush]
+----
+
+.Jenkinsfile - Počistimo iza sebe nepotrebne image
+----
+include::Jenkinsfile[tag=stage_clean_docker_repo]
+----
 
 Ostali tabovi sadrže jobove koji su Openshift plugin jobovi konfigurirani da rade deploy pojedinih aplikacija.
 
@@ -364,7 +406,7 @@ image::nexus-create-repo-data.jpg[scaledwidth=75%,align="center"]
 Nakon kreiranja repozitorija na pregledu istih imamo copy button koji nam daje URL do novokreiranog repozitorija: http://bpxco11.mbu.local:8081/repoository/osvg-docker/
 
 [.thumb]
-image::nexus-create-repo.jpg[scaledwidth=75%,align="center"]
+image::nexus-repo.jpg[scaledwidth=75%,align="center"]
 
 
 === OPENSHIFT
@@ -510,4 +552,7 @@ Da bi dobili binary u Path izvrsiti komandu: +
 
 te izvrsiti komandu koja vam ovisno o OSu ce izgledati otprilike ovako +
 . `SET PATH=c:\xMINISHIFT\cache\oc\v1.5.0;%PATH%`
+
+više o minishiftu: +
+link:minishift.html[Minishift dokumentacija]
 

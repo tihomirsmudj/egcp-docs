@@ -1,6 +1,8 @@
 #!groovy
 // SNAPSHOT JENKINS PIPELINE
 node {
+
+// tag::define_variables[]
     env.SKIP_TLS = true
     def _projectName = "egcp-dcard"
     def svnUrl = 'https://devbuild.mbu.local:9443/svn/java/Microservices/DCS/ms-dcard/trunk'
@@ -9,11 +11,15 @@ node {
     def artifactVersion = pom.version // read artifact version
 
     def image
+// end::define_variables[]
 
+// tag::stage_checkout[]
     stage('\u2622 CHECKOUT') {
         checkout scm
     }
+// end::stage_checkout[]
 
+// tag::stage_deploy[]
     stage("\u2622 DEPLOY ARTIFACTS") {
         configFileProvider([configFile(fileId: '4d3f9e68-7bf2-40e9-8d7e-3363b0410760', variable: 'MAVEN_SETTINGS')]) {
             withMaven(maven: 'M3', globalMavenSettingsConfig: '4d3f9e68-7bf2-40e9-8d7e-3363b0410760', mavenLocalRepo: '.repository') {
@@ -23,7 +29,9 @@ node {
             }  
         }
     }
+// end::stage_deploy[]
 
+// tag::stage_prepare_dockerfile[]
           stage("\u2622 PREPARE DOCKER FILE"){
          try{
             writeFile file: 'Dockerfile', text: '''
@@ -38,7 +46,9 @@ ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -XX:MaxMetaspaceSize=300m -Djava.secur
              throw e
          }
       }
+// end::stage_prepare_dockerfile[]
 
+// tag::stage_dockerpush[]
     docker.withRegistry('https://registry.mbu.local', 'docker') {
         stage("\u2622 CREATE DOCKER IMAGE") {
             try{
@@ -59,7 +69,9 @@ ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -XX:MaxMetaspaceSize=300m -Djava.secur
             }
         }
     }
+// end::stage_dockerpush[]
 
+// tag::stage_clean_docker_repo[]
     stage("\u2622 CLEAN LOCAL DOCKER REPO") {
         try {
             sh 'docker rmi $(docker images -q -f dangling=true)'
@@ -67,4 +79,5 @@ ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -XX:MaxMetaspaceSize=300m -Djava.secur
             println e.message
         }
     }
+// end::stage_clean_docker_repo[]
 }
