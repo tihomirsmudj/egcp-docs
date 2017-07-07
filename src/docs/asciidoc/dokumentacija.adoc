@@ -15,6 +15,7 @@ VERZIJE
 |=========================================================
 |Verzija |Datum |Opis |Autor(i)
 |0.0.1 | 02.05.2017. | Inicijalna Verzija | Tihomir Smuđ, Denis Jajčević
+|0.0.2 | 19.06.2017. | Dodane upute o replikaciji PostgreSQL | Tihomir Smuđ
 |=========================================================
 
 ==  Arhitektura
@@ -202,6 +203,90 @@ NOTE: link:hosts[/etc/ansible/hosts]
 .. logovi se mogu pratiti tailanjem datoteke `os-install.log`
 . Sve ostale feature navedene u host fajli će OS sam skinuti i instalirati tjekom instalacije
 
+
+=== POSTGRESQL
+
+```sh
+oc login
+oc new-project egcp-postgresql-replication
+
+oc project egcp-postgresql-replication +
+oc status +
+```
+
+Kreirati template u projektu openshift da bude dostupan svim ostalim projektima +
+```sh
+oc create -f egcp_postgresql_replica.json -n openshift +
+```
+
+[.thumb]
+image::EGCP-PG-REPLICA-TEMPLATE-CREATE.png[scaledwidth=75%,align="center"]
+
+Provjeriti dostupnost novokreiranog templatea: +
+Lista dostupnih templatea pod: Add to project > Catalog > Data stores +
+[.thumb]
+image::EGCP-PG-REPLICA-TEMPLATE-REPLICA.png[scaledwidth=75%,align="center"]
+
+Source code PostgreSQL replikacijskog template-a:
+link:egcp_postgresql_replica.json[PostgreSQL replikacijski template] +
+
+ili kreirati novu aplikaciju prema templateu iz filea direktno iz CLI-a: +
+```sh
+oc new-app egcp_postgresql_replica.json
+```
+Nakon odabira egcp-pg-replica templatea iz kataloga promjeniti defaultne vrijednosti definirane u templateu +
+[.thumb]
+image::EGCP-PG-REPLICA-TEMPLATE-REPLICA-PARAMETERS.png[scaledwidth=75%,align="center"]
+[.thumb]
+image::EGCP-PG-REPLICA-TEMPLATE-REPLICA-PARAMETERS2.png[scaledwidth=75%,align="center"]
+
+Novokreirana aplikacija ima 1 master node i jedan slave node +
+[.thumb]
+image::EGCP-PG-REPLICA-MASTER-SLAVE.png[scaledwidth=75%,align="center"]
+
+Provjera Master podova-a: +
+[.thumb]
+image::EGCP-PG-REPLICA-MASTER-PODS.png[scaledwidth=75%,align="center"]
+
+Potrebno je skalirati slave-ove na x podova u ovom slučaju 3 poda +
+```sh
+oc scale dc postgresql-slave --replicas=3
+```
+[.thumb]
+image::EGCP-PG-REPLICA-SCALE.png[scaledwidth=75%,align="center"]
+
+Provjera Slave podova-a: +
+[.thumb]
+image::EGCP-PG-REPLICA-SLAVE-PODS.png[scaledwidth=75%,align="center"]
+
+[TIP]
+.Potrebno je forwardirati portove servicea i samog postressql-a prema van za testiranje i provjeru ispravnog rada replikacije
+```sh
+oc port-forward -p postgresql-master-4-p0657 30152 5432
+oc port-forward -p postgresql-slave-2-dtx9b 30153:30152 5433:5432
+oc port-forward -p postgresql-slave-2-z0d7x 30154:30152 5434:5432
+oc port-forward -p postgresql-slave-2-9nk1d 30155:30152 5435:5432
+```
+
+Testiranje ispravnosti repliciranja podataka: +
+
+Spojiti pgadmin direktno na nodove kroz otvorene portove +
+
+Provjera na jednom od slave nodova da nema podataka prije inserta +
+[.thumb]
+image::postgres-local-test-slave-no-data.png[scaledwidth=75%,align="center"]
+
+Napraviti insert u bazu na master nodu +
+[.thumb]
+image::postgres-local-test-master-insert.png[scaledwidth=75%,align="center"]
+
+Provjeriti insert u bazi na masteru
+[.thumb]
+image::postgres-local-test-master-inserted.png[scaledwidth=75%,align="center"]
+
+Provjeriti da su se podaci replicirali po slave nodovima
+[.thumb]
+image::postgres-local-test-slave-inserted.png[scaledwidth=75%,align="center"]
 
 
 == Konfiguracija
